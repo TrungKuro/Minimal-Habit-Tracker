@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:minimal_habit_tracker/components/my_drawer.dart';
 import 'package:minimal_habit_tracker/components/my_habit_title.dart';
+import 'package:minimal_habit_tracker/components/my_heat_map.dart';
 import 'package:minimal_habit_tracker/database/habit_database.dart';
 import 'package:minimal_habit_tracker/models/habit.dart';
 import 'package:minimal_habit_tracker/util/habit_util.dart';
@@ -153,11 +154,22 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       /* ----------------------------- Top App ----------------------------- */
-      appBar: AppBar(),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Theme.of(context).colorScheme.inversePrimary,
+      ),
       drawer: const MyDrawer(),
       /* ----------------------------- Body App ---------------------------- */
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: _buildHabitList(),
+      body: ListView(
+        children: [
+          // HEATMAP
+          _buildHeatMap(),
+          // HABIT LIST
+          _buildHabitList(),
+        ],
+      ),
       /* ---------------------------- Bottom App --------------------------- */
       floatingActionButton: FloatingActionButton(
         onPressed: createNewHabit,
@@ -179,25 +191,52 @@ class _HomePageState extends State<HomePage> {
     List<Habit> currentHabits = habitDatabase.currentHabits;
 
     // Trả về danh sách các Habit trên UI
-    return Padding(
-      padding: const EdgeInsets.only(top: 20),
-      child: ListView.builder(
-        itemCount: currentHabits.length,
-        itemBuilder: (context, index) {
-          // Truy cập đến từng Habit trong danh sách
-          final habit = currentHabits[index];
-          //! use from folder "util"
-          bool isCompletedToday = isHabitCompletedToday(habit.completedDays);
-          // Trả về nội dung UI của Habit
-          return MyHabitTitle(
-            isCompleted: isCompletedToday,
-            text: habit.name,
-            onChanged: (value) => checkHabitOnOff(value, habit),
-            editHabit: (context) => editHabitBox(habit),
-            deleteHabit: (context) => deleteHabitBox(habit),
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      //
+      itemCount: currentHabits.length,
+      itemBuilder: (context, index) {
+        // Truy cập đến từng Habit trong danh sách
+        final habit = currentHabits[index];
+        //! use from folder "util"
+        bool isCompletedToday = isHabitCompletedToday(habit.completedDays);
+        // Trả về nội dung UI của Habit
+        return MyHabitTitle(
+          isCompleted: isCompletedToday,
+          text: habit.name,
+          onChanged: (value) => checkHabitOnOff(value, habit),
+          editHabit: (context) => editHabitBox(habit),
+          deleteHabit: (context) => deleteHabitBox(habit),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeatMap() {
+    // Habit Database
+    final habitDatabase = context.watch<HabitDatabase>();
+
+    // Current Habit
+    List<Habit> currentHabits = habitDatabase.currentHabits;
+
+    // Return HeatMap UI
+    return FutureBuilder(
+      future: habitDatabase.getFirstLaunchDate(),
+      builder: (context, snapshot) {
+        // Một khi có dữ liệu tồn tại -> tạo HeatMap
+        if (snapshot.hasData) {
+          return MyHeatMap(
+            startDate: snapshot.data!,
+            //! use from folder "util"
+            datasets: prepareHeatMapDataset(currentHabits),
           );
-        },
-      ),
+        }
+        // Xử lý trường hợp khi ko có dữ liệu nào trả về
+        else {
+          return Container();
+        }
+      },
     );
   }
 }

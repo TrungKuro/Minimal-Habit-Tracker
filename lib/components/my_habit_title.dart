@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:minimal_habit_tracker/theme/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class MyHabitTitle extends StatelessWidget {
   final String text;
@@ -62,11 +64,14 @@ class MyHabitTitle extends StatelessWidget {
               title: Text(
                 text,
                 style: TextStyle(
-                  color: isCompleted ? Colors.white : Theme.of(context).colorScheme.inversePrimary,
+                  color: isCompleted
+                      ? (Provider.of<ThemeProvider>(context).isDarkMode ? Colors.black : Colors.white)
+                      : Theme.of(context).colorScheme.inversePrimary,
                 ),
               ),
               leading: Checkbox(
                 activeColor: Theme.of(context).colorScheme.primary,
+                checkColor: Provider.of<ThemeProvider>(context).isDarkMode ? Colors.black : Colors.white,
                 value: isCompleted,
                 onChanged: onChanged,
               ),
