@@ -98,7 +98,7 @@ class HabitDatabase extends ChangeNotifier {
             date.year == DateTime.now().year && date.month == DateTime.now().month && date.day == DateTime.now().day);
       }
       // Lưu vào Database, với cập nhập mới
-      await isar.habits.put(habit);
+      await isar.writeTxn(() => isar.habits.put(habit));
     }
     // Đọc lại tất cả từ Database
     readHabits();
@@ -112,7 +112,7 @@ class HabitDatabase extends ChangeNotifier {
       // Cập nhập tên mới cho Habit na2y
       habit.name = newName;
       // Lưu vào Database, với cập nhập mới
-      await isar.habits.put(habit);
+      await isar.writeTxn(() => isar.habits.put(habit));
     }
     // Đọc lại tất cả từ Database
     readHabits();
@@ -121,7 +121,7 @@ class HabitDatabase extends ChangeNotifier {
   /// DELETE - xoá 1 Habit
   Future<void> deleteHabit(int id) async {
     // Tìm Habit được chỉ định và xoá nó
-    await isar.habits.delete(id);
+    await isar.writeTxn(() => isar.habits.delete(id));
     // Đọc lại tất cả từ Database
     readHabits();
   }
